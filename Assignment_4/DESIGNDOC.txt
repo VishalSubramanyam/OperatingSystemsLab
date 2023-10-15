@@ -1,0 +1,69 @@
+Data Structures:
+
+ThreadSafeQueue:
+	This structure has 
+	1. an std::queue
+	2. a mutex for locking the queue when one thread is using it
+	3. a conditional for locking the queue as long as it's empty
+	
+	The member functions
+	
+	1. Enqueue: locks the queue, adds data to end of the queue, signals that the queue is not empty anymore and unlocks the queue
+	2. Dequeue: locks the queue, waits until the queue non is empty, gets the element at the front of the queue, pops the front element and unlocks the queue. Returns the popped element
+	3. IsEmpty: simple check for if queue is empty
+	4. DestroyQueue: clears the queue
+	
+ThreadSafeSet:
+	This structure has 
+	1. an std::set
+	2. a mutex for locking the set when one thread is using it
+	3. a conditional for locking the set as long as it's empty
+	
+	The member functions
+	
+	1. Insert: locks the set, adds data to the set, signals that the set is not empty anymore and unlocks the set
+	2. Erase: locks the set, waits until the set is non empty, gets the element at the start of the set, removes the starting element and unlocks the set. Returns the removed element
+	3. IsEmpty: simple check for if Set is empty
+	4. DestroySet: clears the set
+	5. Contains: Checks if the set contains the given data
+
+Action:
+	Action structure {user_id, action_id, action_type, timestamp}
+	
+	An overloading for the << operator to print the structure
+
+Node:
+	Each node has 
+	1. vector adjList which stores the neighbors of the node
+	2. int priority which stores the priority type(0 for "priority" and 1 for "chronologial")
+	3. vector actionCounter for storing action_id of each type of action 
+	4. Two thread safe queues wall_queue and feed_queue as given in the assignment statement
+	
+Graph:
+	The graph class has 
+	1. vector of nodes
+	2. A 2D matrix which stores the number of common neighbors for each pair of nodes(for use in readPost)
+	
+	The member functions
+	1. givePriorities to set random priorities for each node
+	2. computeCommonNeighbors to populate the commonNeighbors matrix
+	3. computeQueueSize to compute the maximum queue size that might be required at a time by the graph
+	
+Queue and Set sizes:
+
+The userSimulator thread populates the user's wall_queue with actions of it's own(log2(degree)) and the global pushUpdateQueue with all actions generated which could be (100 * max_degree) at once
+
+We've calculated the max degree to be `9458` and the max actions in the queue(with safety nets) as 1400.
+
+
+For the global set, the neighbors of each user_id in the actions are Inserted into it. That is 100 distinct users and the sum of neighbors(degrees) for each. This is similar to the queue situation. So the maximum size of the set is 1400.
+
+How locks are set to ensure no race condition:
+
+Race conditions might arise when Someone tries to Enqueue into a queue/Insert into a set or Dequeue/Erase. 
+
+For inserts:
+The locks are set so that only one thread works on the queue/set at once and signals that the queue is non empty so that someone else(dequeueing or erasing) could work on the other end of the queue
+
+For Erases:
+The locks are set so that only one thread works on the queue/set at once and waits on the queue being empty so that it can dequeue once someone pushes into the queue/set

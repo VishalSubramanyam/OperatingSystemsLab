@@ -1,0 +1,23 @@
+Idea for the heuristic-
+
+	The basic idea to detect the malware is that it most likely will be sleeping and it should have a lot of children. 
+	Alongside that we realised that the cpu usage time of the trojan would be very low since it is sleeping for almost all of it's runtime.
+	Equipped with this information, we decided to come up with a scoring system which combined all these factors and gave out an accurate value to reflect a programs resemblance to a trojan.
+	While creating the scoring method, it is important to keep in mind the importance of each factor, and how the score should vary with changes in said factor.
+	We chose the score to be (approximately)proportional to the runtime as it is our most detrimental factor.
+	The programs sleep state is also a factor from which the score should be heavily affected by, as the malware will be sleeping most of the time.
+	We use inverse for the number of children because as the number increases, it's significance in the total score should decrease.
+	So the score for a certain program would be some linear combination of it's runtime, state(high if running, low if slept) and the inverse of the number of children. 
+	Using trial and error, we came up with a proper combination of these factors.
+	
+	The process with the lowest score would be suggested as the most probable malware.
+
+Getting the values
+
+	Runtime: Sum of utime, stime(14, 15) from "/proc/pid/stat" divided by clock ticks per second
+	State: 3rd entry in "/proc/pid/stat" (0 for sleeping, else 1)
+	Children: Number of subdirectories in "/proc/pid/task"
+
+Scoring System
+
+	Score = Runtime + state*10 + 5/children
